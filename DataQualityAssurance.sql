@@ -8,18 +8,18 @@
 -- Selecting the first 10 records so that I can have a clear picture of how
 -- the data looks like.
 SELECT *
-FROM PropertyDB
+FROM PropertyData
 FETCH FIRST 10 ROWS ONLY;
 
 -- There is also need to check the data structure of this tasssble 
 -- and see the data types we are dealing with.
-DESCRIBE PropertyDB;
+DESCRIBE PropertyData;
 
 -- Populate the Property Address Data (Feature Engineering)
 -- I will check how many of the Property Address has missing values,
 -- and we get 18 record.
 SELECT count (*)
-FROM PropertyDB
+FROM PropertyData
 WHERE propertyaddress is NULL;
 
 -- I now need to find a way to populate the missing values 
@@ -27,10 +27,10 @@ WHERE propertyaddress is NULL;
 -- Rows with the same ParcelID have the Property Address
 -- and we can use this observation to replace the missing fields
 SELECT a.parcelid, a.propertyaddress, b.parcelid, b.propertyaddress
-FROM PropertyDB a
-JOIN PropertyDB b 
-ON a.parcelid = b.parcelid
-AND a.unid != b.unid
+FROM PropertyData a
+JOIN PropertyData b 
+    ON a.parcelid = b.parcelid
+    AND a.uniqueID != b.uniqueID
 WHERE a.propertyaddress is null;
 
 -- After visualising that, now we need to replace the null.
@@ -38,27 +38,48 @@ WHERE a.propertyaddress is null;
 -- corresponding value.
 SELECT a.parcelid, a.propertyaddress, b.parcelid, b.propertyaddress, 
 NVL(a.propertyaddress, b.propertyaddress) newPropertyAddress
-FROM PropertyDB a
-JOIN PropertyDB b 
-ON a.parcelid = b.parcelid
-AND a.unid != b.unid
+FROM PropertyData a
+JOIN PropertyData b 
+    ON a.parcelid = b.parcelid
+    AND a.uniqueID != b.uniqueID
 WHERE a.propertyaddress is null;
 
 -- Updating the Property Address field with missing values
-UPDATE PropertyDB a
+UPDATE PropertyData a
 SET a.propertyaddress = (
     SELECT b.propertyaddress
-    FROM PropertyDB b
+    FROM PropertyData b
     WHERE a.parcelid = b.parcelid
-      AND a.unid != b.unid
+      AND a.uniqueID != b.uniqueID
       AND b.propertyaddress IS NOT NULL
-    FETCH FIRST 1 ROWS ONLY
-)WHERE a.propertyaddress IS NULL;
+    FETCH FIRST 1 ROWS ONLY)
+WHERE a.propertyaddress IS NULL;
 
--- I will separate the address in parts. Address, Town, City etc
-SELECT *
-FROM PropertyDB
---WHERE propertyaddress is NULL;
+-- I will separate the address in parts. Address, Town etc.
+-- I will use ',' as the character to separate the two and TRIM off the spaces off the fields
+SELECT 
+    RTRIM(SUBSTR(propertyaddress, 1, INSTR(propertyaddress, ',') - 1)) AS AddressSplit,
+    LTRIM(SUBSTR(propertyaddress, INSTR(propertyaddress, ',') + 1)) AS TownSplit
+FROM PropertyData;
+
+-- Creating the fields to house the new data.
+-- Using ALTER and the UPDATE statement.
+ALTER TABLE propertydata
+ADD AddressSplit VARCHAR2(35);
+
+UPDATE propertydata
+SET AddressSplit = RTRIM(SUBSTR(propertyaddress, 1, INSTR(propertyaddress, ',') - 1))
+
+ALTER TABLE propertydata
+ADD TownSplit VARCHAR2(35);
+
+UPDATE propertydata
+SET TownSplit = LTRIM(SUBSTR(propertyaddress, INSTR(propertyaddress, ',') + 1))
+
+
+
+
+
 
 
 
