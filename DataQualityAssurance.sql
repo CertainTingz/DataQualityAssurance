@@ -11,21 +11,21 @@ SELECT *
 FROM PropertyData
 FETCH FIRST 10 ROWS ONLY;
 
--- There is also need to check the data structure of this tasssble 
+-- There is also need to check the data structure of this table 
 -- and see the data types we are dealing with.
 DESCRIBE PropertyData;
 
 -- Populate the Property Address Data (Feature Engineering)
 -- I will check how many of the Property Address has missing values,
--- and we get 18 record.
+-- and we get 18 records.
 SELECT count (*)
 FROM PropertyData
 WHERE propertyaddress is NULL;
 
 -- I now need to find a way to populate the missing values 
 -- rather than drop the rows.
--- Rows with the same ParcelID have the Property Address
--- and we can use this observation to replace the missing fields
+-- Rows with the same ParcelID have the PropertyAddress
+-- and we can use this observation to replace the missing fields.
 SELECT a.parcelid, a.propertyaddress, b.parcelid, b.propertyaddress
 FROM PropertyData a
 JOIN PropertyData b 
@@ -44,7 +44,7 @@ JOIN PropertyData b
     AND a.uniqueID != b.uniqueID
 WHERE a.propertyaddress is null;
 
--- Updating the Property Address field with missing values
+-- Updating the Property Address field with missing values.
 UPDATE PropertyData a
 SET a.propertyaddress = (
     SELECT b.propertyaddress
@@ -56,7 +56,7 @@ SET a.propertyaddress = (
 WHERE a.propertyaddress IS NULL;
 
 -- I will separate the address in parts. Address, Town etc.
--- I will use ',' as the character to separate the two and TRIM off the spaces off the fields
+-- I will use ',' as the character to separate the two and TRIM off the spaces off the fields.
 SELECT 
     TRIM(SUBSTR(propertyaddress, 1, INSTR(propertyaddress, ',') - 1)) AS AddressSplit,
     TRIM(SUBSTR(propertyaddress, INSTR(propertyaddress, ',') + 1)) AS TownSplit
@@ -108,7 +108,7 @@ FROM propertydata
 GROUP BY soldasvacant
 ORDER BY 2 DESC;
 
--- Now to correct the categorical data using the CASE statement
+-- Now to correct the categorical data using the CASE statement.
 SELECT soldasvacant,
 CASE 
     WHEN soldasvacant ='Y' THEN 'Yes'
@@ -127,8 +127,8 @@ CASE
 END)
 
 
--- Dealing with duplicates (Not good practice to delete data in a database)
--- Removed UNIQUEID since the could be unique on duplicates records
+-- Dealing with duplicates (Not good practice to delete data in a database).
+-- Removed UNIQUEID since the could be unique on duplicates records.
 SELECT PARCELID, LANDUSE, PROPERTYADDRESS, SALEDATE, SALEPRICE,
 LEGALREFERENCE, SOLDASVACANT, OWNERNAME, OWNERADDRESS, ACREAGE, TAXDISTRICT,
 LANDVALUE, BUILDINGVALUE, TOTALVALUE, YEARBUILT, BEDROOMS, FULLBATH, HALFBATH,
@@ -139,7 +139,7 @@ LEGALREFERENCE, SOLDASVACANT, OWNERNAME, OWNERADDRESS, ACREAGE, TAXDISTRICT,
 LANDVALUE, BUILDINGVALUE, TOTALVALUE, YEARBUILT, BEDROOMS,FULLBATH, HALFBATH
 HAVING COUNT(*) > 1;
 
--- To preview data that is going to be deleted
+-- To preview data that is going to be deleted.
 SELECT *
 FROM propertydata
 WHERE ROWID NOT IN (
@@ -161,7 +161,7 @@ LEGALREFERENCE, SOLDASVACANT, OWNERNAME, OWNERADDRESS, ACREAGE, TAXDISTRICT,
 LANDVALUE, BUILDINGVALUE, TOTALVALUE, YEARBUILT, BEDROOMS,FULLBATH, HALFBATH
 );
 
--- Deleting obsolute fields
+-- Deleting obsolute fields.
 ALTER TABLE propertydata
 DROP COLUMN PROPERTYADDRESS,OWNERADDRESS
 
